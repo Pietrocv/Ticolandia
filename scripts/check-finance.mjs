@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {cents,schedule,totals,csvCell,validDate} from '../lib/finance.ts';
+assert.equal(cents('1.234,56'),123456);
+assert.equal(cents('0,01'),1);
+assert.throws(()=>cents('-1,00'));
+assert.throws(()=>cents('1,234'));
+const installments=schedule(10000,3,'2026-01-31');
+assert.deepEqual(installments.map(i=>i.expected),[3334,3333,3333]);
+assert.deepEqual(installments.map(i=>i.due),['2026-01-31','2026-02-28','2026-03-31']);
+assert.equal(schedule(2,2,'2028-01-31')[1].due,'2028-02-29');
+assert.equal(validDate('2026-02-30'),false);
+const rows=installments.map((i,index)=>({...i,id:String(index),expense_id:'test',paid:index===0?i.expected:index===1?1000:0,paid_date:null,revision:0}));
+assert.deepEqual(totals(rows),{expected:10000,paid:4334,balance:5666});
+assert.equal(csvCell('=SUM(A1)'), '"\'=SUM(A1)"');
+assert.equal(csvCell('a"b'), '"a""b"');
+console.log('PASS: BRL parsing, cent rounding, monthly dates, leap year, partial payments, CSV formula escaping.');

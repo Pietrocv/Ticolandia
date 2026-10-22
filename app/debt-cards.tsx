@@ -1,0 +1,13 @@
+'use client';
+import {useState} from 'react';
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
+import {money,totals,type Ledger} from '@/lib/finance';
+export default function DebtCards({data,scope}:{data:Ledger;scope:string}){
+ const [show,setShow]=useState(false);
+ const p=data.property, included=data.expenses.filter(e=>!e.excluded);
+ const workIds=new Set(included.filter(e=>e.scope==='reforma').map(e=>e.id));
+ const otherIds=new Set(included.filter(e=>e.scope==='casa'&&e.id!==p?.mortgageId).map(e=>e.id));
+ const work=totals(data.installments.filter(i=>workIds.has(i.expense_id))).balance;
+ const other=totals(data.installments.filter(i=>otherIds.has(i.expense_id))).balance;
+ return <>{scope!=='reforma'&&p&&<article className="metric debt"><div className="metric-top">Saldo devedor do financiamento</div><strong>{p.referenceBalance===null?'A informar':money(p.referenceBalance)}</strong><span>Referência da tabela após {p.referenceAfter} prestações. Sujeito à atualização do banco; não é a soma dos boletos futuros.</span><button className="button secondary debt-details" onClick={()=>setShow(true)}>Ver demonstrativo mensal</button></article>}{scope!=='casa'&&<article className="metric work"><div className="metric-top">Falta pagar da obra</div><strong>{money(work)}</strong><span>Saldo dos materiais e serviços cadastrados da reforma.</span></article>}{scope!=='reforma'&&other>0&&<article className="metric"><div className="metric-top">Outras contas da casa a pagar</div><strong>{money(other)}</strong><span>Contas e taxas cadastradas, sem o financiamento.</span></article>}<Dialog open={show} onOpenChange={setShow}><DialogContent className="app-dialog balance-dialog"><DialogTitle>Demonstrativo do saldo devedor</DialogTitle><DialogDescription>Saldo projetado após cada prestação, conforme a tabela enviada. Valores sujeitos a juros e correção por IGP-M; não são cotações de quitação do banco.</DialogDescription>{p?.balanceSchedule?.length?<><div className="balance-head"><span>Mês / parcela</span><span>Saldo após pagamento</span></div><ol className="balance-list">{p.balanceSchedule.filter(r=>r.number>(p.referenceAfter??0)).map(r=><li key={r.number}><span>{new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(r.month+'-01T12:00:00Z'))}<small>Após a prestação {r.number}</small></span><b>{money(r.balance)}</b></li>)}</ol></>:<p>A tabela mensal ainda não foi cadastrada.</p>}<button className="button secondary" onClick={()=>setShow(false)}>Fechar demonstrativo</button></DialogContent></Dialog></>;
+}
