@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Minha Casa | Reforma e prestações",
+  title: "Ticolandia | Reforma e prestações",
   description: "Gastos da reforma, prestações pagas e saldo a pagar em um só lugar.",
   other: {
     "codex-preview": "development",
@@ -24,3 +24,4 @@ export default function RootLayout({
     </html>
   );
 }
+
